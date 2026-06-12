@@ -1,0 +1,113 @@
+configfile: "config/config.yaml"
+
+rule all:
+    input:
+        "results/tables/samples.tsv",
+        "results/tables/genome_metrics.tsv",
+        "results/features/mfannot_features.tsv",
+        "results/tables/feature_table.tsv",
+        "results/genes/.genes_extracted.done",
+        "results/tables/gene_presence_absence.tsv",
+        "results/tables/gene_lengths.tsv",
+        "results/tables/mitogenome_traits.tsv",
+        "results/tables/mitogenome_traits_with_ecology.tsv",
+        "results/stats/statistical_models.tsv",
+        "results/stats/pgls_models.tsv"
+
+rule build_sample_table:
+    output:
+        "results/tables/samples.tsv"
+    params:
+        input_dir=config["raw_mitogenome_dir"]
+    shell:
+        "python scripts/build_sample_table.py --input-dir {params.input_dir} --output {output}"
+
+rule genome_metrics:
+    input:
+        "results/tables/samples.tsv"
+    output:
+        "results/tables/genome_metrics.tsv"
+    shell:
+        "python scripts/compute_genome_metrics.py --samples {input} --output {output}"
+
+rule run_mfannot_all:
+    input:
+        "results/tables/samples.tsv"
+    output:
+        touch("results/annotation/mfannot/.mfannot.done")
+    params:
+        cmd=config["annotation"].get("mfannot_command", "mfannot")
+    shell:
+        "python scripts/run_annotation_batch.py --samples {input} --outdir results/annotation/mfannot --tool mfannot --command {params.cmd} && touch {output}"
+
+rule parse_mfannot:
+    input:
+        "results/annotation/mfannot/.mfannot.done"
+    output:
+        "results/features/mfannot_features.tsv"
+    shell:
+        "python scripts/parse_gff_features.py --tool mfannot --gff-dir results/annotation/mfannot --output {output}"
+
+rule feature_table:
+    input:
+        "results/features/mfannot_features.tsv"
+    output:
+        "results/tables/feature_table.tsv"
+    shell:
+        "python scripts/make_consensus_feature_table.py --features {input} --output {output}"
+
+rule extract_genes:
+    input:
+        samples="results/tables/samples.tsv",
+        features="results/tables/feature_table.tsv"
+    output:
+        touch("results/genes/.genes_extracted.done")
+    shell:
+        "python scripts/extract_features_from_fasta.py --samples {input.samples} --features {input.features} --outdir results/genes && touch {output}"
+
+rule gene_presence_absence:
+    input:
+        "results/tables/feature_table.tsv"
+    output:
+        presence="results/tables/gene_presence_absence.tsv",
+        lengths="results/tables/gene_lengths.tsv"
+    shell:
+        "python scripts/build_gene_matrices.py --features {input} --presence {output.presence} --lengths {output.lengths}"
+
+rule mitogenome_traits:
+    input:
+        metrics="results/tables/genome_metrics.tsv",
+        features="results/tables/feature_table.tsv",
+        presence="results/tables/gene_presence_absence.tsv"
+    output:
+        "results/tables/mitogenome_traits.tsv"
+    shell:
+        "python scripts/summarize_mitogenome_traits.py --metrics {input.metrics} --features {input.features} --presence {input.presence} --output {output}"
+
+rule merge_ecology:
+    input:
+        traits="results/tables/mitogenome_traits.tsv"
+    output:
+        "results/tables/mitogenome_traits_with_ecology.tsv"
+    params:
+        ecology=config.get("ecology_table", "data/metadata/ecology.tsv")
+    shell:
+        "python scripts/merge_ecology.py --traits {input.traits} --ecology {params.ecology} --output {output}"
+
+rule stats:
+    input:
+        "results/tables/mitogenome_traits_with_ecology.tsv"
+    output:
+        "results/stats/statistical_models.tsv"
+    shell:
+        "python scripts/run_statistical_models.py --table {input} --output {output}"
+
+rule pgls:
+    input:
+        table="results/tables/mitogenome_traits_with_ecology.tsv"
+    output:
+        "results/stats/pgls_models.tsv"
+    params:
+        tree=config["statistics"].get("phylogenetic_tree", "results/phylogeny/mt_cds_supermatrix.treefile")
+    shell:
+        "Rscript scripts/run_pgls_models.R {input.table} {params.tree} {output}"

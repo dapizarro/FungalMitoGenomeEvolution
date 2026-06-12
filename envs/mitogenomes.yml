@@ -1,0 +1,35 @@
+name: mitogenomes
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - python>=3.10
+  - biopython
+  - pandas
+  - numpy
+  - scipy
+  - scikit-learn
+  - statsmodels
+  - matplotlib
+  - seaborn
+  - snakemake-minimal
+  - mafft
+  - trimal
+  - iqtree
+  - seqkit
+  - samtools
+  - r-base
+  - r-tidyverse
+  - r-ape
+  - r-caper
+  - r-nlme
+  - r-phylolm
+  - r-vegan
+  - r-broom
+  - r-readr
+  - r-stringr
+  - r-ggplot2
+  - pip
+  - pip:
+      - typer
+      - rich

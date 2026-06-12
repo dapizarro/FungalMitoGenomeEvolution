@@ -1,0 +1,65 @@
+# Global configuration for mitogenome-fasta-evo-pipeline
+
+raw_mitogenome_dir: "data/raw/mitogenomes"
+ecology_table: "data/metadata/ecology.tsv"
+
+sample_table: "results/tables/samples.tsv"
+
+annotation:
+  run_mfannot: true
+  run_mitos: false
+  genetic_code: 4          # Mold/protozoan/coelenterate mitochondrial code; adjust if needed
+  kingdom: "fungi"
+  mfannot_command: "mfannot"     # replace with container wrapper if needed
+  mitos_command: "runmitos.py"   # replace with actual MITOS2 command if used
+
+features:
+  canonical_cds:
+    - atp6
+    - atp8
+    - atp9
+    - cob
+    - cox1
+    - cox2
+    - cox3
+    - nad1
+    - nad2
+    - nad3
+    - nad4
+    - nad4L
+    - nad5
+    - nad6
+  rrna_genes:
+    - rns
+    - rnl
+  min_cds_length_nt: 90
+  max_internal_stop_fraction: 0.0
+
+alignment:
+  aligner: "mafft"
+  mafft_options: "--auto"
+  trimal_options: "-automated1"
+  min_gene_occupancy: 0.50
+  min_aligned_length: 50
+
+phylogeny:
+  iqtree_model: "MFP+MERGE"
+  bootstrap: 1000
+  alrt: 1000
+  threads: "AUTO"
+  prefix: "mt_cds_supermatrix"
+
+statistics:
+  response_traits:
+    - genome_size_bp
+    - gc_percent
+    - cds_count
+    - trna_count
+    - rrna_count
+    - intron_count
+    - intergenic_fraction
+  ecological_predictors:
+    - lifestyle
+    - substrate
+    - climate_zone
+  phylogenetic_tree: "results/phylogeny/mt_cds_supermatrix.treefile"
