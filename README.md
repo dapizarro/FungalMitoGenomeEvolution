@@ -149,6 +149,14 @@ make run CORES=12
 7. Use that tree in PGLS/phylogenetic signal analyses.
 8. Relate mitogenome traits to ecological metadata.
 
-## Notes
+## Status
 
-This repository is intentionally conservative: scripts generate transparent TSV outputs at each step, so every figure and model can be traced back to an intermediate table.
+🚧 Work in progress.
+
+This repository contains an actively developed pipeline for comparative mitochondrial genome analyses. Methods, scripts, and outputs may evolve as development continues.
+
+A manuscript describing the pipeline is not currently available.
+
+If you use this repository, please cite:
+
+> Pizarro D. (2026). mitogenome-fasta-evo-pipeline. https://doi.org/10.5281/zenodo.20700778
